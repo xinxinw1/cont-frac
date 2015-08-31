@@ -1,4 +1,4 @@
-/***** Continued Fractions 1.1 *****/
+/***** Continued Fractions 1.2 *****/
 
 /* require tools 4.0 */
 /* require prec-math 4.1 */
@@ -10,7 +10,9 @@ var udf = undefined;
 
 var str = String;
 
-var falp = $.falp;
+function falp(a){
+  return a === false;
+}
 
 var pos = $.pos;
 var rem = $.rem;
@@ -36,8 +38,8 @@ var satt = $.satt;
 var ratt = $.ratt;
 var con = $.cont;
 
-var prec = PMath.gprec;
-var proc = PMath.proc;
+var prec = R.gprec;
+var proc = Checker.proc;
 
 var Rp = {frac: proc(R.frac)};
 
