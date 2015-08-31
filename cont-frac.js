@@ -1,4 +1,4 @@
-/***** Continued Fractions 1.2 *****/
+/***** Continued Fractions 1.3 *****/
 
 /* require tools 4.0 */
 /* require prec-math 4.1 */
@@ -47,7 +47,7 @@ var Rp = {frac: proc(R.frac)};
 
 function frac(a, b, nprec){
   if (has("/", a)){
-    a = rem(/\s/g, "", a);
+    a = rem(/\s/g, a);
     b = $("b").value = aft("/", a);
     a = $("a").value = bef("/", a);
     foc($("b"));
