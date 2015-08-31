@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Continued Fractions</title>
+  <meta charset="UTF-8">
+  <style type="text/css">
+  form * {vertical-align: middle;}
+  p {white-space: nowrap;}
+  #hidden {display: none;}
+  input[type="submit"] {display: none;}
+  </style>
+  <script src="/codes/libjs/prec-math/1.4/prec-math.js"></script>
+  <script>
+  function $(a){
+    a = String(a);
+    return document.getElementById(a);
+  }
+  
+  var prec = 16;
+  
+  function frac(a, b, nprec){
+    a = String(a); b = String(b);
+    nprec = Number(nprec);
+    
+    if (a.indexOf("/") != -1){
+      a = a.replace(/\s/g, "");
+      b = $("b").value = a.substring(a.indexOf("/")+1, a.length);
+      a = $("a").value = a.substring(a, a.indexOf("/"));
+      $("b").focus();
+    }
+    
+    if (a == "" || b == "" || trimZeros(b) == "0" || /[^0-9]/.test(a) || /[^0-9]/.test(b)){
+      display("");
+      return false;
+    }
+    
+    var dec = divr(a, b, nprec);
+    var arr = fracToArr(a, b);
+    var calc = arrToCalc(arr);
+    var disp = arrToDisp(arr);     
+    
+    display(disp, calc, dec);
+  }
+  
+  function dec(a){
+    a = String(a); var b = "1";
+    
+    if (a == "" || /[^0-9.]/.test(a)){
+      display("");
+      return false;
+    }
+    
+    while (a.indexOf(".") != -1){
+      a = mDotRight(a, 1);
+      b += "0";
+    }
+    
+    var arr = fracToArr(a, b);
+    var calc = arrToCalc(arr);
+    var disp = arrToDisp(arr);
+    
+    display(disp, calc);
+  }
+  
+  function func(a, b, nprec){
+    nprec = Number(nprec);
+    
+    var dec = genContFrac(a, b, nprec);
+    var calc = funcToCalc(a, b);
+    var frac = genContFrac.lastP + " / " + genContFrac.lastQ;
+    
+    display(calc, frac, dec);
+  }
+  
+  function cont(a, nprec){
+    a = String(a);
+    nprec = Number(nprec);
+    
+    a = a.replace(/\s/g, "");
+    
+    if (a == "" || a == "[" || /[^\][0-9;,]/.test(a)){
+      display("");
+      return false;
+    }
+    
+    a = a.replace(/[\]\[]/g, "");
+    a = a.replace(/[;,]$/g, "");
+    
+    var arr = a.split(/[;,]/g);
+    var calc = arrToCalc(arr);
+    
+    var an = function (n){
+      if (n < arr.length)return arr[n];
+      else return null;
+    }
+    
+    var dec = simpContFrac(an, nprec);
+    var frac = simpContFrac.lastP + " / " + simpContFrac.lastQ;
+    
+    display(calc, frac, dec);
+  }
+  
+  function fracToArr(a, b){
+    var arr = [];
+    
+    var both, r;
+    while (r != "0"){
+      both = quotAndRem(a, b);
+      arr.push(both[0]);
+      r = both[1];
+      a = b;
+      b = r;
+    }
+    
+    return arr;
+  }
+  
+  function arrToCalc(arr){
+    var calc = arr[0];
+    for (var i = 1; i < arr.length; i++){
+      calc += "+1/(" + arr[i];
+    }
+    for (var k = i-1; k >= 1; k--){
+      calc += ")";
+    }
+    
+    return calc;
+  }
+  
+  function funcToCalc(a, b){
+    var n = genContFrac.lastN;
+    n = (n > 100)?100:n;
+    var calc = a(0);
+    for (var i = 1; i <= n; i++){
+      calc += "+" + b(i) + "/(" + a(i);
+    }
+    for (var k = i-1; k >= 1; k--){
+      calc += ")";
+    }
+    
+    return calc;
+  }
+  
+  function arrToDisp(arr){
+    if (arr.length > 1)return "[" + arr.shift() + "; " + arr.join(", ") + "]";
+    else return "[" + arr[0] + "]";
+  }
+  
+  function display(res1, res2, res3){
+    $("results1").innerHTML = res1;
+    if (res2 != undefined)$("results2").innerHTML = res2;
+    else $("results2").innerHTML = "";
+    if (res3 != undefined)$("results3").innerHTML = res3;
+    else $("results3").innerHTML = "";
+  }
+  
+  function clearChildren(node){
+    while (node.hasChildNodes()){
+      node.removeChild(node.lastChild);
+    }
+  }
+  
+  var curr = "frac";
+  function change(id){
+    $(curr).setAttribute("href", "javascript:void(0);");
+    $(id).removeAttribute("href");
+    curr = id;
+    clearChildren($("inputs"));
+    clearChildren($("hidden"));
+    $("form").onsubmit = function (){return false;};
+    display("", "");
+    switch (id){
+      case "frac":
+        var exec = function (){
+          frac($("a").value, $("b").value, $("nprec").value);
+        };
+        var input = document.createElement("input");
+        input.setAttribute("type", "text");
+        input.setAttribute("id", "a");
+        input.setAttribute("size", "40");
+        input.setAttribute("autocomplete", "off");
+        input.onkeyup = exec;
+        $("inputs").appendChild(input);
+        var text = document.createTextNode(" / ");
+        $("inputs").appendChild(text);
+        input = document.createElement("input");
+        input.setAttribute("type", "text");
+        input.setAttribute("id", "b");
+        input.setAttribute("size", "40");
+        input.setAttribute("autocomplete", "off");
+        input.onkeyup = exec;
+        $("inputs").appendChild(input);
+        text = document.createTextNode(" nprec: ");
+        $("inputs").appendChild(text);
+        input = document.createElement("input");
+        input.setAttribute("id", "nprec");
+        input.setAttribute("type", "text");
+        input.setAttribute("size", "10");
+        input.setAttribute("autocomplete", "off");
+        input.setAttribute("value", prec);
+        input.onkeyup = exec;
+        $("inputs").appendChild(input);
+        break;
+      case "dec":
+        var input = document.createElement("input");
+        input.setAttribute("type", "text");
+        input.onkeyup = function (){dec(this.value);};
+        input.setAttribute("size", "100");
+        input.setAttribute("autocomplete", "off");
+        $("inputs").appendChild(input);
+        break;
+      case "func":
+        var exec = function (){
+          try {
+            clearChildren($("hidden"));
+            var script = document.createElement("script");
+            var an = "function a(n){" + $("a").value + "}";
+            var text = document.createTextNode(an);
+            script.appendChild(text);
+            var bn = "function b(n){" + $("b").value + "}";
+            text = document.createTextNode(bn);
+            script.appendChild(text);
+            $("hidden").appendChild(script);
+            func(a, b, Number($("nprec").value));
+          } catch (e){
+            display(e);
+          }
+          return false;
+        };
+        var text = document.createTextNode("a(n): ");
+        $("inputs").appendChild(text);
+        var area = document.createElement("textarea");
+        area.setAttribute("id", "a");
+        area.setAttribute("rows", "3");
+        area.setAttribute("cols", "40");
+        $("inputs").appendChild(area);
+        text = document.createTextNode(" b(n): ");
+        $("inputs").appendChild(text);
+        area = document.createElement("textarea");
+        area.setAttribute("id", "b");
+        area.setAttribute("rows", "3");
+        area.setAttribute("cols", "40");
+        $("inputs").appendChild(area);
+        text = document.createTextNode(" nprec: ");
+        $("inputs").appendChild(text);
+        var input = document.createElement("input");
+        input.setAttribute("id", "nprec");
+        input.setAttribute("type", "text");
+        input.setAttribute("size", "10");
+        input.setAttribute("autocomplete", "off");
+        input.setAttribute("value", prec);
+        input.onkeyup = exec;
+        $("inputs").appendChild(input);
+        $("form").onsubmit = exec;
+        break;
+      case "cont":
+        var exec = function (){
+          cont($("a").value, $("nprec").value);
+        };
+        var input = document.createElement("input");
+        input.setAttribute("id", "a");
+        input.setAttribute("type", "text");
+        input.setAttribute("size", "100");
+        input.setAttribute("autocomplete", "off");
+        input.onkeyup = exec;
+        $("inputs").appendChild(input);
+        var text = document.createTextNode(" nprec: ");
+        $("inputs").appendChild(text);
+        input = document.createElement("input");
+        input.setAttribute("id", "nprec");
+        input.setAttribute("type", "text");
+        input.setAttribute("size", "10");
+        input.setAttribute("autocomplete", "off");
+        input.setAttribute("value", prec);
+        input.onkeyup = exec;
+        $("inputs").appendChild(input);
+        break;
+    }
+  }
+             
+  function init(){
+    var arr = ["frac", "dec", "func", "cont"];
+    for (var i = 0; i < arr.length; i++){
+      $(arr[i]).setAttribute("href", "javascript:void(0);");
+      $(arr[i]).onclick = mkOnclick(arr[i]);
+    }
+    change("frac");
+    var text = "javascript:display('Error: unknown (timeout?)');";
+    $("form").setAttribute("action", text);
+  }
+  
+  function mkOnclick(id){
+    return function (){change(id);};
+  }
+  </script>
+</head>
+
+<body onload="init();">
+  <form id="form">
+    <p>
+      <span id="inputs"></span>
+      (<a id="frac">frac</a> | <a id="dec">dec</a> | <a id="func">func</a> | <a  id="cont">cont</a>)
+      <input type="submit">
+    </p>
+  </form>
+  <p>
+    = <span id="results1"></span>
+  </p>
+  <p>
+    = <span id="results2"></span>
+  </p>
+  <p>
+    = <span id="results3"></span>
+  </p>
+  <div id="hidden"></div>
+</body>
+
+</html>

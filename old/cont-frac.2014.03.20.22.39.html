@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Continued Fractions</title>
+  <meta charset="UTF-8">
+  <style type="text/css">
+  form * {vertical-align: middle;}
+  p {white-space: nowrap;}
+  #hidden {display: none;}
+  input[type="submit"] {display: none;}
+  </style>
+  <script src="/codes/libjs/tools/3.x-devel/tools.js"></script>
+  <script src="/codes/libjs/prec-math/devel2/prec-math.js"></script>
+  <script src="/codes/libjs/prec-math-check/devel/prec-math-check.js"></script>
+  <script>
+  var len = $.len;
+  var sli = $.sli;
+  var bef = $.bef;
+  var aft = $.aft;
+  var pos = $.pos;
+  var rpl = $.rpl;
+  var foc = $.foc;
+  
+  var prec = 16;
+  
+  var genContFrac = PMath.makeProcessor(R.genContFrac);
+  var simpContFrac = PMath.makeProcessor(R.simpContFrac);
+  
+  function frac(a, b, nprec){
+    if (has("/", a)){
+      a = rpl(/\s/g, "", a);
+      b = $("b").value = aft("/", a);
+      a = $("a").value = bef("/", a);
+      foc($("b"));
+    }
+    
+    if ($.isFalse(a = R.prep(a)) || $.isFalse(b = R.prep(b)) || $.isFalse(nprec = R.prepInt(nprec))){
+      display("");
+      return false;
+    }
+    
+    var dec = R.div(a, b, nprec);
+    var arr = fracToArr(a, b);
+    var calc = arrToCalc(arr);
+    var disp = arrToDisp(arr);     
+    
+    display(disp, calc, dec);
+  }
+  
+  function dec(a){
+    if ($.isFalse(a = R.prep(a))){
+      display("");
+      return false;
+    }
+    
+    var b = "1";
+    while (a.indexOf(".") != -1){
+      a = R.mDotRight(a, 1);
+      b += "0";
+    }
+    
+    var arr = fracToArr(a, b);
+    var calc = arrToCalc(arr);
+    var disp = arrToDisp(arr);
+    
+    display(disp, calc);
+  }
+  
+  function func(a, b, nprec){
+    if ($.isFalse(nprec = R.prepInt(nprec))){
+      display("");
+      return false;
+    }
+    
+    var dec = genContFrac(a, b, nprec);
+    var calc = funcToCalc(a, b);
+    var frac = genContFrac.lastNums[1] + " / " + genContFrac.lastNums[2];
+    // lastP and lastQ
+    
+    display(calc, frac, dec);
+  }
+  
+  function cont(a, nprec){
+    if ($.isFalse(nprec = R.prepInt(nprec))){
+      display("");
+      return false;
+    }
+    
+    a = String(a);
+    a = a.replace(/\s/g, "");
+    
+    var reg = /^\[(\+|-)?[0-9]+(\.[0-9]+)?((;|,)(\+|-)?[0-9]+(\.[0-9]+)?)*\]?$/;
+    if (!reg.test(a)){
+      display("");
+      return false;
+    }
+    
+    a = a.replace(/[\[\]]/g, "");
+    
+    var arr = a.split(/[;,]/g);
+    var calc = arrToCalc(arr);
+    
+    var an = function (n){
+      if (n < arr.length)return arr[n];
+      else return null;
+    }
+    
+    var dec = simpContFrac(an, nprec);
+    var frac = simpContFrac.lastNums[1] + " / " + simpContFrac.lastNums[2];
+    
+    display(calc, frac, dec);
+  }
+  
+  function fracToArr(a, b){
+    var arr = [];
+    
+    var both, r;
+    while (r != "0"){
+      both = R.quotAndRem(a, b);
+      arr.push(both[0]);
+      r = both[1];
+      a = b;
+      b = r;
+    }
+    
+    return arr;
+  }
+  
+  function arrToCalc(arr){
+    var calc = arr[0];
+    for (var i = 1; i < arr.length; i++){
+      calc += "+1/(" + arr[i];
+    }
+    for (var k = i-1; k >= 1; k--){
+      calc += ")";
+    }
+    
+    return calc;
+  }
+  
+  function funcToCalc(a, b){
+    var n = genContFrac.lastNums[0]; // lastN
+    n = (n > 100)?100:n;
+    var calc = a(0);
+    for (var i = 1; i <= n; i++){
+      calc += "+" + b(i) + "/(" + a(i);
+    }
+    for (var k = i-1; k >= 1; k--){
+      calc += ")";
+    }
+    
+    return calc;
+  }
+  
+  function arrToDisp(arr){
+    if (len(arr) > 1)return "[" + arr.shift() + "; " + arr.join(", ") + "]";
+    return "[" + arr[0] + "]";
+  }
+  
+  function display(res1, res2, res3){
+    $("results1").innerHTML = res1;
+    if (!udfp(res2))$("results2").innerHTML = res2;
+    else $("results2").innerHTML = "";
+    if (!udfp(res3))$("results3").innerHTML = res3;
+    else $("results3").innerHTML = "";
+  }
+  
+  var curr = "frac";
+  function change(id){
+    satt($(curr), "href", "javascript:void(0);");
+    ratt($(id), "href");
+    curr = id;
+    clr($("inputs"));
+    clr($("hidden"));
+    $("form").onsubmit = function (){return false;};
+    display("", "");
+    var ins = $("inputs");
+    switch (id){
+      case "frac":
+        var exec = function (){
+          frac($("a").value, $("b").value, $("nprec").value);
+        };
+        var ps = {type: "text", autocomplete: "off", onkeyup: exec};
+        con(ins,
+          ["input", add(ps, {id: "a", size: "40"})],
+          " / ",
+          ["input", add(ps, {id: "b", size: "40"})],
+          " nprec: ",
+          ["input", add(ps, {id: "nprec", size: "10", value: prec})]);
+        break;
+      case "dec":
+        con(ins,
+          ["input", {type: "text",
+                     size: "100",
+                     autocomplete: "off",
+                     onkeyup: function (){dec(this.value);}}]);
+        break;
+      case "func":
+        var exec = function (){
+          try {
+            con($("hidden"),
+              ["script", "function a(n){" + $("a").value + "}",
+                         "function b(n){" + $("b").value + "}"]);
+            func(a, b, num($("nprec").value));
+          } catch (e){
+            display(e);
+          }
+          return false;
+        };
+        con(ins,
+          "a(n): ", ["textarea", {id: "a", rows: 3, cols: 40}],
+          "b(n): ", ["textarea", {id: "b", rows: 3, cols: 40}],
+          "nprec: ", ["input", {type: "text",
+                                id: "nprec",
+                                size: "10",
+                                value: prec,
+                                autocomplete: "off",
+                                onkeyup: exec}]);
+        $("form").onsubmit = exec;
+        break;
+      case "cont":
+        var exec = function (){
+          cont($("a").value, $("nprec").value);
+        };
+        var ps = {type: "text", autocomplete: "off", onkeyup: exec};
+        con(ins, 
+          ["input", add(ps, {id: "a", size: 100})],
+          " nprec: ",
+          ["input", add(ps, {id: "nprec", size: 10, value: prec})]);
+        break;
+    }
+  }
+             
+  function init(){
+    var arr = ["frac", "dec", "func", "cont"];
+    for (var i = 0; i < len(arr); i++){
+      satt($(arr[i]), {href: "javascript:void(0);",
+                       onclick: mkOnclick(arr[i])});
+    }
+    change("frac");
+    var text = "javascript:display('Error: unknown (timeout?)');";
+    satt($("form"), "action", text);
+  }
+  
+  function mkOnclick(id){
+    return function (){change(id);};
+  }
+  </script>
+</head>
+
+<body onload="init();">
+  <form id="form">
+    <p>
+      <span id="inputs"></span>
+      (<a id="frac">frac</a> | <a id="dec">dec</a> | <a id="func">func</a> | <a  id="cont">cont</a>)
+      <input type="submit">
+    </p>
+  </form>
+  <p>
+    = <span id="results1"></span>
+  </p>
+  <p>
+    = <span id="results2"></span>
+  </p>
+  <p>
+    = <span id="results3"></span>
+  </p>
+  <div id="hidden"></div>
+</body>
+
+</html>

@@ -1,0 +1,6 @@
+Continued Fractions 1.1 - Jul 17, 2014 15:29
+
+- using new tools, prec-math, math-check
+- can now take negative numbers
+- trailing "." and "-" are ignored
+- if nprec is invalid, doesn't cause inf loop
