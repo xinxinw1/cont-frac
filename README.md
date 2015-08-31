@@ -34,13 +34,13 @@ To run the program, click inside the nprec box, and press Enter or change the nu
 
 For example, this gives [the golden ratio](https://en.wikipedia.org/wiki/Golden_ratio#Alternative_forms)
 
-a(n)
+#### a(n)
 
 ```
 return 1;
 ```
 
-b(n)
+#### b(n)
 
 ```
 return 1;
@@ -48,7 +48,7 @@ return 1;
 
 This gives [Euler's number e](https://en.wikipedia.org/wiki/E_%28mathematical_constant%29#Representations):
 
-a(n)
+#### a(n)
 
 ```
 if (n == 0)return 2;
@@ -57,7 +57,7 @@ if (n % 3 == 2)return ((n+1)/3)*2;
 if (n % 3 == 0)return 1;
 ```
 
-b(n)
+#### b(n)
 
 ```
 return 1;
