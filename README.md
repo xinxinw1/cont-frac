@@ -1,6 +1,6 @@
 # Continued Fractions
 
-Run it at http://musiclifephilosophy.com/codes/cont-frac/
+Run it at https://xin-xin.me/code/cont-frac/
 
 This program makes it easy to study continued fractions.
 
